@@ -6,7 +6,8 @@
 <title>건축사시험 플래너</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-:root{
+/* 라이트 변수 — :root + body 양쪽 선언으로 상속 보장 */
+:root,body{
   --bg:#f2f3f7;--surface:#fff;--surface2:#eaecf2;--border:#dde1ec;--border2:#c4c9da;
   --text:#14142a;--text2:#44475a;--text3:#8b90a8;
   --accent:#3451d1;--adim:rgba(52,81,209,.09);
@@ -20,7 +21,8 @@
   --shadow-sm:0 1px 3px rgba(0,0,0,.08);
   --r:10px;--rs:6px;
 }
-.dark{
+/* 다크 변수 — body.dark 로 오버라이드 */
+body.dark{
   --bg:#0c0c10;--surface:#13131a;--surface2:#1b1b24;--border:#252530;--border2:#34344a;
   --text:#eeeef8;--text2:#aaaac0;--text3:#606080;
   --accent:#6688ff;--adim:rgba(102,136,255,.12);
@@ -71,14 +73,14 @@ input[type=date]:focus{border-color:var(--accent);}
 .ob-next:hover{opacity:.9;}
 
 /* ── 로딩 ── */
-#ld{display:none;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;}
+#ld{display:none;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;background:var(--bg);}
 .spin{width:36px;height:36px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .ld-info{margin-top:18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;text-align:left;width:100%;max-width:320px;font-size:12px;color:var(--text2);line-height:2.1;}
 .ld-info b{color:var(--accent);}
 
 /* ── 플래너 ── */
-#pl{display:none;flex-direction:column;min-height:100vh;}
+#pl{display:none;flex-direction:column;min-height:100vh;background:var(--bg);}
 .pl-hd{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);padding:11px 14px 9px;box-shadow:var(--shadow-sm);}
 .pl-hd-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;}
 .pl-title{font-size:14px;font-weight:700;}
@@ -105,7 +107,7 @@ input[type=date]:focus{border-color:var(--accent);}
 .fb.on{background:var(--accent);border-color:var(--accent);color:#fff;}
 
 /* ── 뷰 공통 ── */
-#v-today,#v-all,#v-err{padding:12px 12px 80px;}
+#v-today,#v-all,#v-err{padding:12px 12px 80px;background:var(--bg);min-height:100vh;}
 #v-all,#v-err{display:none;}
 
 /* 스테이지 구분선 */
@@ -196,6 +198,11 @@ input[type=date]:focus{border-color:var(--accent);}
 
 /* FAB */
 .fab{position:fixed;bottom:16px;right:12px;z-index:200;display:flex;flex-direction:column;gap:7px;align-items:flex-end;}
+.bm-banner{background:var(--adim);border:1px solid var(--accent);border-radius:var(--rs);padding:11px 13px;margin:0 0 12px;font-size:12px;color:var(--text2);line-height:1.7;position:relative;}
+.bm-banner strong{display:block;color:var(--accent);font-size:13px;margin-bottom:4px;}
+.bm-close{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;line-height:1;padding:0;}
+.bm-steps{margin-top:6px;padding-left:16px;color:var(--text3);}
+.bm-steps li{margin-bottom:2px;}
 .fab-btn{padding:9px 14px;border-radius:20px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;box-shadow:var(--shadow);}
 .fab-btn:hover{color:var(--red);border-color:var(--red);}
 .fab-restart{color:var(--text3);}
@@ -226,7 +233,7 @@ input[type=date]:focus{border-color:var(--accent);}
 <!-- 온보딩 -->
 <div id="ob">
   <div class="ob-topbar">
-    <div class="thm-wrap"><span id="thm-ico">🌙</span><button class="thm" id="thm-btn"></button></div>
+    <div class="thm-wrap"><span id="thm-ico">☀️</span><button class="thm" id="thm-btn"></button></div>
   </div>
   <div class="ob-hd">
     <div class="ob-logo">건축사시험</div>
@@ -304,7 +311,7 @@ input[type=date]:focus{border-color:var(--accent);}
       <div class="pl-title">건축사시험 플래너</div>
       <div class="pl-right">
         <div class="dday" id="dday">D-??</div>
-        <div class="thm-wrap"><span id="thm-ico2">🌙</span><button class="thm" id="thm-btn2"></button></div>
+        <div class="thm-wrap"><span id="thm-ico2">☀️</span><button class="thm" id="thm-btn2"></button></div>
       </div>
     </div>
     <div class="prog-grid" id="prog-grid"></div>
@@ -897,7 +904,25 @@ function renderToday(){
   var wAll=week.weekday.items.concat(week.weekend.items);
   var wDone=wAll.filter(function(i){return i.done;}).length;
   var allDone=day.items.length>0&&day.items.every(function(i){return i.done;});
-  var html='<div class="td-hd"><div class="td-date">'+ds+'</div><div class="td-title">오늘 할 일</div>'
+
+  // 북마크 안내 배너 (닫기 전까지 표시)
+  var bmHidden=localStorage.getItem('arch-bm-hidden');
+  var bmHtml='';
+  if(!bmHidden){
+    var isIOS=/iPhone|iPad/.test(navigator.userAgent);
+    var steps=isIOS
+      ? '<li>Safari 하단 공유 버튼 탭</li><li>홈 화면에 추가 선택</li><li>추가 탭 → 홈 화면 아이콘 생성</li>'
+      : '<li>브라우저 주소창 오른쪽 ☆ 탭</li><li>북마크 저장</li><li>다음부터 북마크로 접속</li>';
+    bmHtml='<div class="bm-banner" id="bm-banner">'
+      +'<button class="bm-close" id="bm-close">×</button>'
+      +'<strong>📌 이 페이지를 저장하세요</strong>'
+      +'데이터는 이 브라우저에만 저장됩니다.<br>같은 브라우저로 접속해야 플랜이 유지됩니다.'
+      +'<ul class="bm-steps">'+steps+'</ul>'
+      +'</div>';
+  }
+
+  var html=bmHtml
+    +'<div class="td-hd"><div class="td-date">'+ds+'</div><div class="td-title">오늘 할 일</div>'
     +'<div class="td-sub">'+(isWE?'주말':'평일')+' · '+esc(day.goal||'')+'</div></div>'
     +'<div class="td-badge">W'+week.weekNum+' · '+esc(week.course||'')+' &nbsp;·&nbsp; 이번 주 '+wDone+'/'+wAll.length+'</div>'
     +'<div class="sec-lbl">'+(isWE?'주말':'평일')+' 학습 항목</div>';
@@ -909,6 +934,15 @@ function renderToday(){
     +'<div class="bar"><div class="bar-f" style="width:'+(other.items.length?oDone/other.items.length*100:0)+'%;background:var(--accent)"></div></div>'
     +'</div>';
   el('v-today').innerHTML=html;
+  // 북마크 배너 닫기
+  var bmClose=el('bm-close');
+  if(bmClose){
+    bmClose.addEventListener('click',function(){
+      var banner=el('bm-banner');
+      if(banner)banner.style.display='none';
+      localStorage.setItem('arch-bm-hidden','1');
+    });
+  }
   // 오늘 뷰 이벤트
   el('v-today').querySelectorAll('.tck').forEach(function(btn){
     btn.addEventListener('click',function(){
@@ -1079,23 +1113,23 @@ function load(){
 // 테마
 // ═══════════════════════════════════
 function setTheme(dark){
-  if(dark)document.documentElement&&document.documentElement.classList.add('dark');
-  else document.documentElement&&document.documentElement.classList.remove('dark');
-  var ico=dark?'☀️':'🌙';
+  if(dark)document.body.classList.add('dark');
+  else document.body.classList.remove('dark');
+  var ico=dark?'🌙':'☀️';
   el('thm-ico').textContent=ico;
   if(el('thm-ico2'))el('thm-ico2').textContent=ico;
 }
 function initTheme(){
-  var dark=localStorage.getItem('arch-theme')==='dark';
+  var saved=localStorage.getItem('arch-theme');
+  var dark=saved==='dark'; // 명시적으로 'dark' 저장한 경우만 다크
   setTheme(dark);
-  el('thm-btn').addEventListener('click',function(){
-    var d=!( document.documentElement&&document.documentElement.classList.contains)('dark');
-    setTheme(d);localStorage.setItem('arch-theme',d?'dark':'light');
-  });
-  if(el('thm-btn2'))el('thm-btn2').addEventListener('click',function(){
-    var d=!( document.documentElement&&document.documentElement.classList.contains)('dark');
-    setTheme(d);localStorage.setItem('arch-theme',d?'dark':'light');
-  });
+  function onToggle(){
+    var d=!document.body.classList.contains('dark');
+    setTheme(d);
+    localStorage.setItem('arch-theme',d?'dark':'light');
+  }
+  el('thm-btn').addEventListener('click',onToggle);
+  if(el('thm-btn2'))el('thm-btn2').addEventListener('click',onToggle);
 }
 
 // ═══════════════════════════════════
