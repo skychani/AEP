@@ -35,13 +35,13 @@ body{font-family:'Apple SD Gothic Neo',system-ui,sans-serif;background:var(--bg)
 button,input,select,textarea{font-family:inherit;}
 
 /* ── 온보딩 ── */
-#ob{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+#ob{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:var(--bg);}
 .ob-topbar{width:100%;max-width:420px;display:flex;justify-content:flex-end;margin-bottom:16px;}
 .ob-hd{text-align:center;margin-bottom:24px;}
 .ob-logo{font-size:10px;letter-spacing:3px;color:var(--text3);text-transform:uppercase;margin-bottom:10px;}
 .ob-hd h1{font-size:22px;font-weight:700;}
 .ob-hd p{margin-top:5px;color:var(--text2);font-size:13px;}
-.ob-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:100%;max-width:420px;box-shadow:var(--shadow);}
+.ob-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;width:100%;max-width:420px;box-shadow:var(--shadow);overflow:hidden;}
 .ob-dots{display:flex;gap:5px;justify-content:center;margin-bottom:20px;}
 .od{width:6px;height:6px;border-radius:50%;background:var(--border2);transition:background .3s;}
 .od.on{background:var(--accent);}
@@ -57,9 +57,13 @@ button,input,select,textarea{font-family:inherit;}
 .oo .lb{font-size:13px;color:var(--text2);}
 .oo .lb small{display:block;font-size:11px;color:var(--text3);margin-top:1px;}
 .oo.sel .lb{color:var(--text);}
-input[type=date]{width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:14px;outline:none;}
+input[type=date]{width:100%;padding:10px 12px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:14px;outline:none;-webkit-appearance:none;appearance:none;}
 input[type=date]:focus{border-color:var(--accent);}
 .dark input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6);}
+.date-row{display:flex;gap:6px;align-items:center;}
+.date-sel{flex:1;padding:10px 8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--rs);color:var(--text);font-size:14px;outline:none;-webkit-appearance:none;appearance:none;text-align:center;cursor:pointer;}
+.date-sel:focus{border-color:var(--accent);}
+.date-sep{color:var(--text3);font-size:16px;font-weight:300;flex-shrink:0;}
 .dp{margin-top:6px;font-size:12px;color:var(--accent);text-align:center;min-height:18px;}
 .ob-nav{display:flex;gap:7px;margin-top:16px;}
 .ob-back{flex:1;padding:10px;background:transparent;border:1px solid var(--border);border-radius:var(--rs);color:var(--text2);font-size:13px;cursor:pointer;}
@@ -191,9 +195,11 @@ input[type=date]:focus{border-color:var(--accent);}
 .add-week:hover{border-color:var(--accent);color:var(--accent);}
 
 /* FAB */
-.fab{position:fixed;bottom:16px;right:12px;z-index:200;}
+.fab{position:fixed;bottom:16px;right:12px;z-index:200;display:flex;flex-direction:column;gap:7px;align-items:flex-end;}
 .fab-btn{padding:9px 14px;border-radius:20px;background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;box-shadow:var(--shadow);}
 .fab-btn:hover{color:var(--red);border-color:var(--red);}
+.fab-restart{color:var(--text3);}
+.fab-restart:hover{color:var(--accent)!important;border-color:var(--accent)!important;}
 
 /* 테마 토글 */
 .thm{width:34px;height:19px;background:var(--border2);border-radius:10px;border:none;cursor:pointer;position:relative;transition:background .25s;}
@@ -247,8 +253,10 @@ input[type=date]:focus{border-color:var(--accent);}
     <!-- step 1 -->
     <div id="s1" style="display:none">
       <div class="ob-q">시험 예정일을 입력하세요</div>
-      <div class="ob-hint">남은 기간에 맞게 주차를 배분합니다</div>
-      <input type="date" id="exam-date">
+      <div class="ob-hint">건축사시험은 토요일에 시행됩니다</div>
+      <select class="date-sel" id="d-sat" style="width:100%;font-size:14px;padding:11px 12px;">
+        <option value="">토요일 선택</option>
+      </select>
       <div class="dp" id="dp">날짜를 선택하세요</div>
       <div class="ob-nav">
         <button class="ob-back" id="b1">이전</button>
@@ -310,7 +318,9 @@ input[type=date]:focus{border-color:var(--accent);}
   <div id="v-today"></div>
   <div id="v-all"></div>
   <div id="v-err"></div>
-  <div class="fab"><button class="fab-btn" id="fab-reset">↺ 체크 초기화</button></div>
+  <div class="fab">
+    <button class="fab-btn fab-restart" id="fab-restart">⟳ 처음 선택화면</button>
+  </div>
 </div>
 
 <!-- 모달 -->
@@ -475,6 +485,23 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 // ═══════════════════════════════════
 // 온보딩 이벤트 등록
 // ═══════════════════════════════════
+function buildSaturdayOptions(){
+  var satEl=el('d-sat');
+  if(!satEl)return;
+  var opts='<option value="">토요일 선택</option>';
+  var d=new Date();d.setHours(0,0,0,0);
+  while(d.getDay()!==6)d.setDate(d.getDate()+1);
+  var end=new Date();end.setFullYear(end.getFullYear()+2);
+  while(d<=end){
+    var y=d.getFullYear(),m=d.getMonth()+1,day=d.getDate();
+    var ms=String(m).padStart(2,'0'),ds=String(day).padStart(2,'0');
+    var val=y+'-'+ms+'-'+ds;
+    opts+='<option value="'+val+'">'+y+'년 '+m+'월 '+day+'일 (토)</option>';
+    d.setDate(d.getDate()+7);
+  }
+  satEl.innerHTML=opts;
+}
+
 function initOB(){
   // 교시 선택
   el('subj-opts').querySelectorAll('.oo').forEach(function(o){
@@ -493,21 +520,21 @@ function initOB(){
   });
   el('n0').addEventListener('click',function(){if(APP.subj.length)goStep(1);});
 
-  // 날짜
-  var dateInput=el('exam-date');
+  // 토요일 목록 생성
+  buildSaturdayOptions();
+
   function onDate(){
-    var val=dateInput.value;
-    if(!val){el('dp').textContent='날짜를 선택하세요';return;}
+    var val=el('d-sat').value;
+    if(!val){el('dp').textContent='날짜를 선택하세요';APP.date=null;return;}
     APP.date=val;
     var p=val.split('-');
     var ex=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
     var td=new Date();td.setHours(0,0,0,0);
     var diff=Math.round((ex-td)/86400000);
-    var wks=Math.max(1,Math.round(Math.max(diff,7)/7));
-    el('dp').textContent=diff>=0?('D-'+diff+' · 약 '+wks+'주 플랜 생성'):'시험일이 지났습니다';
+    var wks=Math.max(1,Math.round(diff/7));
+    el('dp').textContent='D-'+diff+' · 약 '+wks+'주 플랜 생성';
   }
-  dateInput.addEventListener('change',onDate);
-  dateInput.addEventListener('input',onDate);
+  el('d-sat').addEventListener('change',onDate);
   el('n1').addEventListener('click',function(){if(APP.date)goStep(2);else el('dp').textContent='날짜를 먼저 선택해 주세요';});
   el('b1').addEventListener('click',function(){goStep(0);});
 
@@ -603,7 +630,7 @@ function mkItems(arr,types,tm,fbSubj){
 function renderPlanner(){
   hide('ld');show('pl','flex');
   updateDDay();renderProg();renderFbar();renderAll();switchView('today');
-  setupPlannerEvents();
+  if(!APP._eventsSet){APP._eventsSet=true;setupPlannerEvents();}
 }
 
 function updateDDay(){
@@ -974,13 +1001,40 @@ function setupPlannerEvents(){
   el('vt-today').addEventListener('click',function(){switchView('today');});
   el('vt-all').addEventListener('click',function(){switchView('all');});
   el('vt-err').addEventListener('click',function(){switchView('err');});
-  el('fab-reset').addEventListener('click',function(){
-    if(!confirm('모든 체크를 초기화하시겠습니까?\n텍스트, 메모, 오답 유형은 유지됩니다.'))return;
-    APP.weeks.forEach(function(w){
-      w.weekday.items.concat(w.weekend.items).forEach(function(i){i.done=false;i.completedAt=null;i.actualMin=null;});
-    });
-    save();renderAll();renderProg();if(APP.view==='today')renderToday();
+
+  // 처음 선택화면 — confirm 없이 버튼 2단계로 처리
+  var restartBtn=el('fab-restart');
+  var restartReady=false;
+  var restartTimer=null;
+  restartBtn.addEventListener('click',function(){
+    if(!restartReady){
+      restartReady=true;
+      restartBtn.textContent='한번 더 누르면 초기화';
+      restartBtn.style.color='var(--red)';
+      restartBtn.style.borderColor='var(--red)';
+      clearTimeout(restartTimer);
+      restartTimer=setTimeout(function(){
+        restartReady=false;
+        restartBtn.textContent='⟳ 처음 선택화면';
+        restartBtn.style.color='';
+        restartBtn.style.borderColor='';
+      },3000);
+      return;
+    }
+    // 2번째 클릭 — 실행
+    clearTimeout(restartTimer);
+    localStorage.removeItem('arch3');
+    APP.subj=[];APP.date=null;APP.level=null;APP.time=null;APP.weeks=[];APP.view='today';
+    document.querySelectorAll('.oo').forEach(function(o){o.classList.remove('sel');});
+    buildSaturdayOptions();
+    var sat=el('d-sat');if(sat)sat.value='';
+    el('dp').textContent='날짜를 선택하세요';
+    el('pl').style.display='none';
+    el('ld').style.display='none';
+    el('ob').style.display='flex';
+    goStep(0);
   });
+
   el('m-cancel').addEventListener('click',function(){el('modal').classList.remove('open');});
   el('m-ok').addEventListener('click',function(){
     var t=el('m-text').value.trim();if(!t)return;
